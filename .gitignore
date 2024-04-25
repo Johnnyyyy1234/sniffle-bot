@@ -4,4 +4,4 @@ config.json
 .eslintrc.json
 package-lock.json
 .vscode
-gifs
+gifs*
