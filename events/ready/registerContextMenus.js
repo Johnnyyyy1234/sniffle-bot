@@ -24,6 +24,11 @@ module.exports = async (client) => {
 					console.log(
 						`Application command ${contextMenuName} has been deleted`.red,
 					);
+				} else {
+					console.log(
+						`Application command ${contextMenuName} already exists and will be skipped`
+							.gray,
+					);
 				}
 			} else {
 				if (localContextMenu.deleted) {
