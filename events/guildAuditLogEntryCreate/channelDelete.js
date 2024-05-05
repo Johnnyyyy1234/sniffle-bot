@@ -9,7 +9,7 @@ const loggingSchema = require("../../schemas/auditlogging");
 
 module.exports = async (client, auditLogEntry, guild) => {
 	try {
-		if (auditLogEntry.action !== AuditLogEvent.ChannelCreate) return;
+		if (auditLogEntry.action !== AuditLogEvent.ChannelDelete) return;
 
 		const logSchema = await loggingSchema.findOne({
 			GuildID: guild.id,
@@ -17,14 +17,14 @@ module.exports = async (client, auditLogEntry, guild) => {
 
 		if (
 			!logSchema ||
-			!logSchema.ChannelCreate.Enabled ||
-			logSchema.ChannelCreate.ChannelID === ""
+			!logSchema.ChannelDelete.Enabled ||
+			logSchema.ChannelDelete.ChannelID === ""
 		)
 			return;
 
 		const { target, executor } = auditLogEntry;
 		const logChannel = logSchema.ChannelDelete.ChannelID;
-		const externalLogChannel = client.channels.cache.get(logChannel);
+		const externalLogChannel = client.channels.cache.get(logChannel)
 
 		const channelTypeNames = {
 			[ChannelType.GuildText]: "Text",
@@ -40,7 +40,7 @@ module.exports = async (client, auditLogEntry, guild) => {
 		};
 		const channelTypeName = channelTypeNames[target.type] || "Unknown";
 
-		let settingsValue = `<:arrow:1236147217329422368> **Name:** ${target.name}\n<:arrow:1236147217329422368> **Type:** ${channelTypeName}`;
+		let settingsValue = `<:arrow:1236147217329422368> **Name:** ${target.name} \`${target.id}\`\n<:arrow:1236147217329422368> **Type:** ${channelTypeName}`;
 
 		if (target.type !== ChannelType.GuildCategory) {
 			settingsValue += `\n<:arrow:1236147217329422368> **NSFW:** ${
@@ -50,22 +50,20 @@ module.exports = async (client, auditLogEntry, guild) => {
 			}`;
 		}
 
-		const channelCreateEmbed = new EmbedBuilder()
-			.setTitle("Channel Create")
+		const channelDeleteEmbed = new EmbedBuilder()
+			.setTitle("Channel Delete")
 			.setDescription(
 				`<:arrow:1236147217329422368> **Responsible:** ${executor} \`${
 					executor.id
-				}\`\n<:arrow:1236147217329422368> **Target:** <#${target.id}> \`${
-					target.id
 				}\`\n<:arrow:1236147217329422368> ${time(target.createdAt, "F")}`,
 			)
 			.addFields({
-				name: "Settings",
+				name: "Original Settings",
 				value: settingsValue,
 			})
-			.setColor(mConfig.embedColorSuccess);
+			.setColor(mConfig.embedColorError);
 
-		externalLogChannel.send({ embeds: [channelCreateEmbed] });
+			externalLogChannel.send({ embeds: [channelDeleteEmbed] });
 	} catch (error) {
 		console.error(error);
 	}
